@@ -1,8 +1,11 @@
+import { isNil } from 'lodash';
 import { Association } from 'sequelize';
 
-export function Integer(n: any): number {
-  if (/^\d+$/.test(n)) {
+export function Integer(n: any): number | undefined {
+  if (/^\d*$/.test(n)) {
     return Number(n);
+  } else if (isNil(n)) {
+    return undefined;
   } else {
     return NaN;
   }

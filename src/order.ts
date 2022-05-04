@@ -1,6 +1,7 @@
 import { Model, OrderItem } from 'sequelize/types';
+import { QModel } from './query-builder';
 
-export function __processOrder(params: { m: typeof Model; e: string[] }) {
+export function __processOrder<M extends Model>(params: { m: QModel<M>; e: string[] }) {
   return (item: string): OrderItem => {
     const processed = {
       field: item,
@@ -39,7 +40,7 @@ export function __processOrder(params: { m: typeof Model; e: string[] }) {
             r.push(relation.target);
             relations = relation.target.associations || {};
           } else {
-            params.e.push(`invalid model for 'order': ${spl[i]}`);
+            params.e.push(`Invalid model for 'order': ${spl[i]}`);
             return '';
           }
         }

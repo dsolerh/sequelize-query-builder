@@ -1,4 +1,4 @@
-import { Model, FindOptions, Attributes } from 'sequelize';
+import { Model, FindOptions, Attributes, ModelStatic, ModelAttributeColumnOptions, Association } from 'sequelize';
 import { __replaceFilterKeys } from './filter';
 import { __processOrder } from './order';
 import { QueryError } from './query-error';
@@ -9,11 +9,19 @@ interface DefaultParams {
   offset?: number;
 }
 
+export interface QModel<M extends Model> {
+  getAttributes(): {
+    readonly [Key in keyof Attributes<M>]: ModelAttributeColumnOptions;
+  };
+  associations: {
+    [key: string]: Association;
+  };
+}
 export class QueryBuilder<M extends Model> {
   private _errors: string[] = [];
   private _forIncludes: any = {};
   constructor(
-    private readonly _model: typeof Model,
+    private readonly _model: QModel<M>,
     private readonly _defaults: DefaultParams = {},
     private readonly _query: FindOptions<Attributes<M>> = {},
   ) {}
@@ -27,11 +35,13 @@ export class QueryBuilder<M extends Model> {
   }
 
   private _set(param: keyof DefaultParams, val: number) {
-    val = Integer(val);
-    if (!isNaN(val)) {
-      this._query[param] = val != 0 ? val : undefined;
-    } else {
+    const v = Integer(val);
+    if (v === undefined) {
       this._query[param] = this._defaults[param];
+    } else if (!isNaN(v)) {
+      this._query[param] = v != 0 ? v : undefined;
+    } else {
+      this._errors.push(`Invalid ${param}`);
     }
     return this;
   }
